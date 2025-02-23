@@ -5,11 +5,11 @@
     "author": "Xenon Colt",
     "authorId": "709210314230726776",
     "authorLink": "https://xenoncolt.me",
-    "version": "0.4.3",
+    "version": "0.4.4",
     "description": "Automatically set your status to Do Not Disturb when you launch a game",
     "website": "https://xenoncolt.me",
     "source": "https://github.com/xenoncolt/AutoDNDOnGame",
-    "invite": "vJRe78YmN8vJRe78YmN8",
+    "invite": "vJRe78YmN8",
     "info": {
         "name": "AutoDNDOnGame",
         "authors": [
@@ -19,13 +19,13 @@
                 "link": "https://xenoncolt.me"
             }
         ],
-        "version": "0.4.3",
+        "version": "0.4.4",
         "description": "Automatically set your status to Do Not Disturb when you launch a game",
         "github": "https://github.com/xenoncolt/AutoDNDOnGame",
-        "invite": "vJRe78YmN8vJRe78YmN8",
+        "invite": "vJRe78YmN8",
         "github_raw": "https://raw.githubusercontent.com/xenoncolt/AutoDNDOnGame/main/release/AutoDNDOnGame.plugin.js"
     },
-    "helpers": "dev @xenoncolt",
+    "helpers": "thanks to DB team",
     "changelog": [
         {
             "title": "Fixed A Metadata error",
