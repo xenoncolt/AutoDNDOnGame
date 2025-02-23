@@ -1,7 +1,7 @@
 /**
  * @name AutoDNDOnGame
  * @description Automatically set your status to Do Not Disturb when you launch a game
- * @version 0.4.2
+ * @version 0.4.3
  * @author Xenon Colt
  * @authorLink https://xenoncolt.me
  * @website https://github.com/xenoncolt/AutoDNDOnGame
@@ -38,7 +38,7 @@ const config = {
     author: "Xenon Colt",
     authorId: "709210314230726776",
     authorLink: "https://xenoncolt.me",
-    version: "0.4.2",
+    version: "0.4.3",
     description: "Automatically set your status to Do Not Disturb when you launch a game",
     website: "https://xenoncolt.me",
     source: "https://github.com/xenoncolt/AutoDNDOnGame",
@@ -52,7 +52,7 @@ const config = {
                 link: "https://xenoncolt.me"
             }
         ],
-        version: "0.4.2",
+        version: "0.4.3",
         description: "Automatically set your status to Do Not Disturb when you launch a game",
         github: "https://github.com/xenoncolt/AutoDNDOnGame",
         invite: "vJRe78YmN8vJRe78YmN8",
@@ -61,10 +61,10 @@ const config = {
     helpers: "dev @xenoncolt",
     changelog: [
         {
-            title: "Changelog display issue",
+            title: "Fixed A Metadata error",
             type: "fixed",
             items: [
-                "Fixed changelog not showing up after update"
+                "Fixed a metadata error that caused the plugin to not load"
             ]
         }
     ],
