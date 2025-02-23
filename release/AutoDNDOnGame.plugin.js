@@ -1,12 +1,12 @@
 /**
  * @name AutoDNDOnGame
  * @description Automatically set your status to Do Not Disturb when you launch a game
- * @version 0.4.1
+ * @version 0.4.2
  * @author Xenon Colt
  * @authorLink https://xenoncolt.me
  * @website https://github.com/xenoncolt/AutoDNDOnGame
  * @source https://raw.githubusercontent.com/xenoncolt/AutoDNDOnGame/main/release/AutoDNDOnGame.plugin.js
- * @invite https://discord.gg/vJRe78YmN8vJRe78YmN8
+ * @invite vJRe78YmN8vJRe78YmN8
  */
 /*@cc_on
 @if (@_jscript)
@@ -38,11 +38,11 @@ const config = {
     author: "Xenon Colt",
     authorId: "709210314230726776",
     authorLink: "https://xenoncolt.me",
-    version: "0.4.1",
+    version: "0.4.2",
     description: "Automatically set your status to Do Not Disturb when you launch a game",
     website: "https://xenoncolt.me",
     source: "https://github.com/xenoncolt/AutoDNDOnGame",
-    invite: "https://discord.gg/vJRe78YmN8vJRe78YmN8",
+    invite: "vJRe78YmN8vJRe78YmN8",
     info: {
         name: "AutoDNDOnGame",
         authors: [
@@ -52,10 +52,10 @@ const config = {
                 link: "https://xenoncolt.me"
             }
         ],
-        version: "0.4.1",
+        version: "0.4.2",
         description: "Automatically set your status to Do Not Disturb when you launch a game",
         github: "https://github.com/xenoncolt/AutoDNDOnGame",
-        invite: "https://discord.gg/vJRe78YmN8vJRe78YmN8",
+        invite: "vJRe78YmN8vJRe78YmN8",
         github_raw: "https://raw.githubusercontent.com/xenoncolt/AutoDNDOnGame/main/release/AutoDNDOnGame.plugin.js"
     },
     helpers: "dev @xenoncolt",
