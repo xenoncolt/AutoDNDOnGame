@@ -1,9 +1,9 @@
 /**
  * @name AutoDNDOnGame
  * @description Automatically set your status to Do Not Disturb when you launch a game
- * @version 0.2.0
+ * @version 0.3.0
  * @author Xenon Colt
- * @authorLink https://github.com/xenoncolt
+ * @authorLink https://xenoncolt.me
  * @website https://github.com/xenoncolt/AutoDNDOnGame
  * @source https://raw.githubusercontent.com/xenoncolt/AutoDNDOnGame/main/release/AutoDNDOnGame.plugin.js
  * @invite https://discord.gg/vJRe78YmN8vJRe78YmN8
@@ -38,7 +38,7 @@ const config = {
     author: "Xenon Colt",
     authorId: "709210314230726776",
     authorLink: "https://xenoncolt.me",
-    version: "0.2.0",
+    version: "0.3.0",
     description: "Automatically set your status to Do Not Disturb when you launch a game",
     website: "https://xenoncolt.me",
     source: "https://github.com/xenoncolt/AutoDNDOnGame",
@@ -49,10 +49,10 @@ const config = {
             {
                 name: "Xenon Colt",
                 github_username: "xenoncolt",
-                link: "https://github.com/xenoncolt"
+                link: "https://xenoncolt.me"
             }
         ],
-        version: "0.2.0",
+        version: "0.3.0",
         description: "Automatically set your status to Do Not Disturb when you launch a game",
         github: "https://github.com/xenoncolt/AutoDNDOnGame",
         invite: "https://discord.gg/vJRe78YmN8vJRe78YmN8",
@@ -63,7 +63,7 @@ const config = {
             type: "added",
             title: "Added Auto Update",
             items: [
-                "The plugin will now automatically update when a new version is available"
+                "The plugin will now automatically update when a new version is available | Testing working or not"
             ]
         }
     ],
