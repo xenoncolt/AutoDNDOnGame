@@ -58,11 +58,11 @@ const config = {
         invite: "https://discord.gg/vJRe78YmN8vJRe78YmN8",
         github_raw: "https://raw.githubusercontent.com/xenoncolt/AutoDNDOnGame/main/release/AutoDNDOnGame.plugin.js"
     },
-    helpers: "",
+    helpers: "dev @xenoncolt",
     changelog: [
         {
+            title: "Changelog display issue",
             type: "fixed",
-            title: "Fixed changelog",
             items: [
                 "Fixed changelog not showing up after update"
             ]
