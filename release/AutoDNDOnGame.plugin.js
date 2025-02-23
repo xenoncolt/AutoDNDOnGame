@@ -1,7 +1,7 @@
 /**
  * @name AutoDNDOnGame
  * @description Automatically set your status to Do Not Disturb when you launch a game
- * @version 0.3.0
+ * @version 0.4.0
  * @author Xenon Colt
  * @authorLink https://xenoncolt.me
  * @website https://github.com/xenoncolt/AutoDNDOnGame
@@ -38,7 +38,7 @@ const config = {
     author: "Xenon Colt",
     authorId: "709210314230726776",
     authorLink: "https://xenoncolt.me",
-    version: "0.3.0",
+    version: "0.4.0",
     description: "Automatically set your status to Do Not Disturb when you launch a game",
     website: "https://xenoncolt.me",
     source: "https://github.com/xenoncolt/AutoDNDOnGame",
@@ -52,7 +52,7 @@ const config = {
                 link: "https://xenoncolt.me"
             }
         ],
-        version: "0.3.0",
+        version: "0.4.0",
         description: "Automatically set your status to Do Not Disturb when you launch a game",
         github: "https://github.com/xenoncolt/AutoDNDOnGame",
         invite: "https://discord.gg/vJRe78YmN8vJRe78YmN8",
@@ -61,9 +61,9 @@ const config = {
     changelog: [
         {
             type: "added",
-            title: "Added Auto Update",
+            title: "Added Change Log",
             items: [
-                "The plugin will now automatically update when a new version is available | Testing working or not"
+                "Added a change log to the plugin. It will show after update the plugin."
             ]
         }
     ],
@@ -167,7 +167,7 @@ if (!global.ZeresPluginLibrary) {
 module.exports = !global.ZeresPluginLibrary ? Dummy : (([Plugin, Api]) => {
      const plugin = (Plugin, Library) => {
 
-    const { Logger, DiscordModules, Patcher, PluginUpdater } = Library;
+    const { Logger, Modals, DiscordModules, Patcher, PluginUpdater } = Library;
     const { Webpack } = BdApi;
 
     // Retrieve modules used to update the user’s status.
@@ -225,7 +225,7 @@ module.exports = !global.ZeresPluginLibrary ? Dummy : (([Plugin, Api]) => {
                 return this.buildSettingsPanel().getElement();
             };
 
-            this.gameStatusIntervalId = null;
+            // this.gameStatusIntervalId = null;
             // A key used to store game status set by the plugin
             this.keyGameStatusSetByPlugin = "GameStatusSetByPlugin";
             // Flag to know if the plugin previously set the status.
@@ -284,6 +284,8 @@ module.exports = !global.ZeresPluginLibrary ? Dummy : (([Plugin, Api]) => {
             // }, this.settings.pollingInterval);
 
             PluginUpdater.checkForUpdate(this._config.info.name, this._config.info.version, this._config.info.github_raw);
+
+            Modals.showChangelogModal(this._config.changelog, this._config.info.version);
 
             this.presenceStore = Webpack.getStore("PresenceStore");
             if (!this.presenceStore) {

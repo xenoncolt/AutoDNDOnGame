@@ -38,7 +38,7 @@
 
 module.exports = (Plugin, Library) => {
 
-    const { Logger, DiscordModules, Patcher, PluginUpdater } = Library;
+    const { Logger, Modals, DiscordModules, Patcher, PluginUpdater } = Library;
     const { Webpack } = BdApi;
 
     // Retrieve modules used to update the user’s status.
@@ -96,7 +96,7 @@ module.exports = (Plugin, Library) => {
                 return this.buildSettingsPanel().getElement();
             };
 
-            this.gameStatusIntervalId = null;
+            // this.gameStatusIntervalId = null;
             // A key used to store game status set by the plugin
             this.keyGameStatusSetByPlugin = "GameStatusSetByPlugin";
             // Flag to know if the plugin previously set the status.
@@ -155,6 +155,8 @@ module.exports = (Plugin, Library) => {
             // }, this.settings.pollingInterval);
 
             PluginUpdater.checkForUpdate(this._config.info.name, this._config.info.version, this._config.info.github_raw);
+
+            Modals.showChangelogModal(this._config.changelog, this._config.info.version);
 
             this.presenceStore = Webpack.getStore("PresenceStore");
             if (!this.presenceStore) {
