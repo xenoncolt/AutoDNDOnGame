@@ -5,7 +5,7 @@
     "author": "Xenon Colt",
     "authorId": "709210314230726776",
     "authorLink": "https://xenoncolt.me",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "description": "Automatically set your status to Do Not Disturb when you launch a game",
     "website": "https://xenoncolt.me",
     "source": "https://github.com/xenoncolt/AutoDNDOnGame",
@@ -19,7 +19,7 @@
                 "link": "https://github.com/xenoncolt"
             }
         ],
-        "version": "0.1.0",
+        "version": "0.2.0",
         "description": "Automatically set your status to Do Not Disturb when you launch a game",
         "github": "https://github.com/xenoncolt/AutoDNDOnGame",
         "invite": "https://discord.gg/vJRe78YmN8vJRe78YmN8",
@@ -27,10 +27,10 @@
     },
     "changelog": [
         {
-            "type": "fixed",
-            "title": "Activity Status not detected",
+            "type": "added",
+            "title": "Added Auto Update",
             "items": [
-                "Fixed an issue where the plugin would not detect the activity status of the game."
+                "The plugin will now automatically update when a new version is available"
             ]
         }
     ],

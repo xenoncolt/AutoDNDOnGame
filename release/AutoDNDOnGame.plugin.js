@@ -1,42 +1,171 @@
 /**
- * 
- * @param {import("zerespluginlibrary").Plugin} Plugin 
- * @param {import("zerespluginlibrary").BoundAPI} Library 
- * @returns 
+ * @name AutoDNDOnGame
+ * @description Automatically set your status to Do Not Disturb when you launch a game
+ * @version 0.2.0
+ * @author Xenon Colt
+ * @authorLink https://github.com/xenoncolt
+ * @website https://github.com/xenoncolt/AutoDNDOnGame
+ * @source https://raw.githubusercontent.com/xenoncolt/AutoDNDOnGame/main/release/AutoDNDOnGame.plugin.js
+ * @invite https://discord.gg/vJRe78YmN8vJRe78YmN8
  */
+/*@cc_on
+@if (@_jscript)
+    
+    // Offer to self-install for clueless users that try to run this directly.
+    var shell = WScript.CreateObject("WScript.Shell");
+    var fs = new ActiveXObject("Scripting.FileSystemObject");
+    var pathPlugins = shell.ExpandEnvironmentStrings("%APPDATA%\\BetterDiscord\\plugins");
+    var pathSelf = WScript.ScriptFullName;
+    // Put the user at ease by addressing them in the first person
+    shell.Popup("It looks like you've mistakenly tried to run me directly. \n(Don't do that!)", 0, "I'm a plugin for BetterDiscord", 0x30);
+    if (fs.GetParentFolderName(pathSelf) === fs.GetAbsolutePathName(pathPlugins)) {
+        shell.Popup("I'm in the correct folder already.", 0, "I'm already installed", 0x40);
+    } else if (!fs.FolderExists(pathPlugins)) {
+        shell.Popup("I can't find the BetterDiscord plugins folder.\nAre you sure it's even installed?", 0, "Can't install myself", 0x10);
+    } else if (shell.Popup("Should I copy myself to BetterDiscord's plugins folder for you?", 0, "Do you need some help?", 0x34) === 6) {
+        fs.CopyFile(pathSelf, fs.BuildPath(pathPlugins, fs.GetFileName(pathSelf)), true);
+        // Show the user where to put plugins in the future
+        shell.Exec("explorer " + pathPlugins);
+        shell.Popup("I'm installed!", 0, "Successfully installed", 0x40);
+    }
+    WScript.Quit();
 
-/**
- * @typedef {import("../../BDPluginLibrary/src/ui/ui").ContextMenu} ContextMenu
- * @typedef {import("../../BDPluginLibrary/src/ui/ui").DiscordContextMenu} DiscordContextMenu
- * @typedef {import("../../BDPluginLibrary/src/ui/ui").Modals} Modals
- * @typedef {import("../../BDPluginLibrary/src/ui/ui").Popouts} Popouts
- * @typedef {import("../../BDPluginLibrary/src/ui/ui").ErrorBoundary} ErrorBoundary
- * @typedef {import("../../BDPluginLibrary/src/ui/ui").Tooltip} Tooltip
- * @typedef {import("../../BDPluginLibrary/src/ui/toasts")} Toasts
- * @typedef {import("../../BDPluginLibrary/src/ui/settings/index")} Settings
- * @typedef {import("../../BDPluginLibrary/src/modules/modules")} Modules
- * @typedef {import("../../BDPluginLibrary/src/structs/plugin.js")} Plugin
- */
-/**
- * @typedef {Modules & {
-* DiscordContextMenu: DiscordContextMenu,
-* ContextMenu: ContextMenu,
-* Tooltip: Tooltip,
-* Toasts: Toasts,
-* Settings: Settings,
-* Popouts: Popouts,
-* Modals: Modals
-* }} Library
-*/
-
-/**
-* Creates the plugin class.
-* @param {typeof Plugin} Plugin
-* @param {Library} Library
-* @returns {typeof globalThis.Plugin}
-*/
-
-module.exports = (Plugin, Library) => {
+@else@*/
+const config = {
+    main: "index.js",
+    id: "xenoncolt",
+    name: "AutoDNDOnGame",
+    author: "Xenon Colt",
+    authorId: "709210314230726776",
+    authorLink: "https://xenoncolt.me",
+    version: "0.2.0",
+    description: "Automatically set your status to Do Not Disturb when you launch a game",
+    website: "https://xenoncolt.me",
+    source: "https://github.com/xenoncolt/AutoDNDOnGame",
+    invite: "https://discord.gg/vJRe78YmN8vJRe78YmN8",
+    info: {
+        name: "AutoDNDOnGame",
+        authors: [
+            {
+                name: "Xenon Colt",
+                github_username: "xenoncolt",
+                link: "https://github.com/xenoncolt"
+            }
+        ],
+        version: "0.2.0",
+        description: "Automatically set your status to Do Not Disturb when you launch a game",
+        github: "https://github.com/xenoncolt/AutoDNDOnGame",
+        invite: "https://discord.gg/vJRe78YmN8vJRe78YmN8",
+        github_raw: "https://raw.githubusercontent.com/xenoncolt/AutoDNDOnGame/main/release/AutoDNDOnGame.plugin.js"
+    },
+    changelog: [
+        {
+            type: "added",
+            title: "Added Auto Update",
+            items: [
+                "The plugin will now automatically update when a new version is available"
+            ]
+        }
+    ],
+    defaultConfig: [
+        {
+            type: "radio",
+            name: "Change Status To:",
+            note: "What status should be set when you launch a game?",
+            id: "inGameStatus",
+            value: "dnd",
+            options: [
+                {
+                    name: "Do Not Disturb",
+                    value: "dnd"
+                },
+                {
+                    name: "Invisible",
+                    value: "invisible"
+                },
+                {
+                    name: "Idle",
+                    value: "idle"
+                }
+            ]
+        },
+        {
+            type: "slider",
+            name: "Back to Online Delay:",
+            note: "How long should the plugin wait before setting your status back to online after you close a game?",
+            id: "revertDelay",
+            defaultValue: 10,
+            min: 5,
+            max: 120,
+            units: "s",
+            markers: [
+                5,
+                15,
+                30,
+                45,
+                60,
+                75,
+                90,
+                105,
+                120
+            ]
+        },
+        {
+            type: "switch",
+            name: "Show Notification",
+            note: "Should the plugin show a notification when it changes your status?",
+            id: "showToasts",
+            value: true,
+            defaultValue: true
+        },
+        {
+            type: "slider",
+            name: "Back to Online Delay:",
+            note: "How long should the plugin wait before setting your status back to online after you close a game?",
+            id: "pollingInterval",
+            defaultValue: 5000,
+            min: 5000,
+            max: 60000,
+            units: "ms",
+            markers: [
+                5000,
+                15000,
+                30000,
+                45000,
+                60000
+            ]
+        }
+    ]
+};
+class Dummy {
+    constructor() {this._config = config;}
+    start() {}
+    stop() {}
+}
+ 
+if (!global.ZeresPluginLibrary) {
+    BdApi.showConfirmationModal("Library Missing", `The library plugin needed for ${config.name ?? config.info.name} is missing. Please click Download Now to install it.`, {
+        confirmText: "Download Now",
+        cancelText: "Cancel",
+        onConfirm: () => {
+            require("request").get("https://betterdiscord.app/gh-redirect?id=9", async (err, resp, body) => {
+                if (err) return require("electron").shell.openExternal("https://betterdiscord.app/Download?id=9");
+                if (resp.statusCode === 302) {
+                    require("request").get(resp.headers.location, async (error, response, content) => {
+                        if (error) return require("electron").shell.openExternal("https://betterdiscord.app/Download?id=9");
+                        await new Promise(r => require("fs").writeFile(require("path").join(BdApi.Plugins.folder, "0PluginLibrary.plugin.js"), content, r));
+                    });
+                }
+                else {
+                    await new Promise(r => require("fs").writeFile(require("path").join(BdApi.Plugins.folder, "0PluginLibrary.plugin.js"), body, r));
+                }
+            });
+        }
+    });
+}
+ 
+module.exports = !global.ZeresPluginLibrary ? Dummy : (([Plugin, Api]) => {
+     const plugin = (Plugin, Library) => {
 
     const { Logger, DiscordModules, Patcher, PluginUpdater } = Library;
     const { Webpack } = BdApi;
@@ -277,3 +406,6 @@ module.exports = (Plugin, Library) => {
         }
     };
 };
+     return plugin(Plugin, Api);
+})(global.ZeresPluginLibrary.buildPlugin(config));
+/*@end@*/
