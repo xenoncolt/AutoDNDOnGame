@@ -156,7 +156,7 @@ module.exports = (Plugin, Library) => {
 
             PluginUpdater.checkForUpdate(this._config.info.name, this._config.info.version, this._config.info.github_raw);
 
-            Modals.showChangelogModal(this._config.changelog, this._config.info.version);
+            Modals.showChangelogModal("AutoDNDOnGame Changelog", this._config.info.version ,this._config.changelog, this._config.helpers);
 
             this.presenceStore = Webpack.getStore("PresenceStore");
             if (!this.presenceStore) {

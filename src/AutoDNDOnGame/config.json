@@ -5,7 +5,7 @@
     "author": "Xenon Colt",
     "authorId": "709210314230726776",
     "authorLink": "https://xenoncolt.me",
-    "version": "0.4.0",
+    "version": "0.4.1",
     "description": "Automatically set your status to Do Not Disturb when you launch a game",
     "website": "https://xenoncolt.me",
     "source": "https://github.com/xenoncolt/AutoDNDOnGame",
@@ -19,18 +19,19 @@
                 "link": "https://xenoncolt.me"
             }
         ],
-        "version": "0.4.0",
+        "version": "0.4.1",
         "description": "Automatically set your status to Do Not Disturb when you launch a game",
         "github": "https://github.com/xenoncolt/AutoDNDOnGame",
         "invite": "https://discord.gg/vJRe78YmN8vJRe78YmN8",
         "github_raw": "https://raw.githubusercontent.com/xenoncolt/AutoDNDOnGame/main/release/AutoDNDOnGame.plugin.js"
     },
+    "helpers": "",
     "changelog": [
         {
-            "type": "added",
-            "title": "Added Change Log",
+            "type": "fixed",
+            "title": "Changelog display issue",
             "items": [
-                "Added a change log to the plugin. It will show after update the plugin."
+                "Fixed changelog not showing up after update"
             ]
         }
     ],

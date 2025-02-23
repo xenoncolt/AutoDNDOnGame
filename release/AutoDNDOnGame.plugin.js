@@ -1,7 +1,7 @@
 /**
  * @name AutoDNDOnGame
  * @description Automatically set your status to Do Not Disturb when you launch a game
- * @version 0.4.0
+ * @version 0.4.1
  * @author Xenon Colt
  * @authorLink https://xenoncolt.me
  * @website https://github.com/xenoncolt/AutoDNDOnGame
@@ -38,7 +38,7 @@ const config = {
     author: "Xenon Colt",
     authorId: "709210314230726776",
     authorLink: "https://xenoncolt.me",
-    version: "0.4.0",
+    version: "0.4.1",
     description: "Automatically set your status to Do Not Disturb when you launch a game",
     website: "https://xenoncolt.me",
     source: "https://github.com/xenoncolt/AutoDNDOnGame",
@@ -52,18 +52,19 @@ const config = {
                 link: "https://xenoncolt.me"
             }
         ],
-        version: "0.4.0",
+        version: "0.4.1",
         description: "Automatically set your status to Do Not Disturb when you launch a game",
         github: "https://github.com/xenoncolt/AutoDNDOnGame",
         invite: "https://discord.gg/vJRe78YmN8vJRe78YmN8",
         github_raw: "https://raw.githubusercontent.com/xenoncolt/AutoDNDOnGame/main/release/AutoDNDOnGame.plugin.js"
     },
+    helpers: "",
     changelog: [
         {
-            type: "added",
-            title: "Added Change Log",
+            type: "fixed",
+            title: "Fixed changelog",
             items: [
-                "Added a change log to the plugin. It will show after update the plugin."
+                "Fixed changelog not showing up after update"
             ]
         }
     ],
@@ -285,7 +286,7 @@ module.exports = !global.ZeresPluginLibrary ? Dummy : (([Plugin, Api]) => {
 
             PluginUpdater.checkForUpdate(this._config.info.name, this._config.info.version, this._config.info.github_raw);
 
-            Modals.showChangelogModal(this._config.changelog, this._config.info.version);
+            Modals.showChangelogModal("AutoDNDOnGame Changelog", this._config.info.version ,this._config.changelog, this._config.helpers);
 
             this.presenceStore = Webpack.getStore("PresenceStore");
             if (!this.presenceStore) {
