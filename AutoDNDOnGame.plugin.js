@@ -1,7 +1,7 @@
 /**
  * @name AutoDNDOnGame
  * @description Automatically set your status to Do Not Disturb when you launch a game
- * @version 1.0.0
+ * @version 1.0.1
  * @author Xenon Colt
  * @authorLink https://xenoncolt.me
  * @website https://github.com/xenoncolt/AutoDNDOnGame
@@ -16,7 +16,7 @@ const config = {
     author: "Xenon Colt",
     authorId: "709210314230726776",
     authorLink: "https://xenoncolt.me",
-    version: "1.0.0",
+    version: "1.0.1",
     description: "Automatically set your status to Do Not Disturb when you launch a game",
     website: "https://xenoncolt.me",
     source: "https://github.com/xenoncolt/AutoDNDOnGame",
@@ -30,7 +30,7 @@ const config = {
                 link: "https://xenoncolt.me"
             }
         ],
-        version: "1.0.0",
+        version: "1.0.1",
         description: "Automatically set your status to Do Not Disturb when you launch a game",
         github: "https://github.com/xenoncolt/AutoDNDOnGame",
         invite: "vJRe78YmN8",
@@ -39,20 +39,23 @@ const config = {
     helpers: ":3",
     changelog: [
         {
-            title: "Fixed Deprecated Function Usage",
+            title: "Fixed Deprecated Function And More",
             type: "fixed",
             items: [
-                "Fixed deprecated function usage in the plugin"
+                "Fixed deprecated function usage in the plugin",
+                "Updated the plugin to use the latest BetterDiscord API",
+                "Fixed Version update not working",
+                "Fixed where changelog do not show properly"
             ]
         }
     ],
-    defaultConfig: [
+    settingsPanel: [
         {
             type: "radio",
             name: "Change Status To:",
             note: "What status should be set when you launch a game?",
             id: "inGameStatus",
-            value: "dnd",
+            value: () => settings.inGameStatus,
             options: [
                 {
                     name: "Do Not Disturb",
@@ -73,7 +76,7 @@ const config = {
             name: "Back to Online Delay:",
             note: "How long should the plugin wait before setting your status back to online after you close a game?",
             id: "revertDelay",
-            defaultValue: 10,
+            value: () => settings.revertDelay,
             min: 5,
             max: 120,
             units: "s",
@@ -94,15 +97,14 @@ const config = {
             name: "Show Notification",
             note: "Should the plugin show a notification when it changes your status?",
             id: "showToasts",
-            value: true,
-            defaultValue: true
+            value: () => settings.showToasts,
         },
         {
             type: "slider",
             name: "Back to Online Delay:",
             note: "How long should the plugin wait before setting your status back to online after you close a game?",
             id: "pollingInterval",
-            defaultValue: 5000,
+            value: () => settings.pollingInterval,
             min: 5000,
             max: 60000,
             units: "ms",
@@ -117,6 +119,15 @@ const config = {
     ]
 };
 
+let settings = {};
+
+let defaultSettings = {
+    inGameStatus: "dnd",
+    revertDelay: 10,
+    showToasts: true,
+    pollingInterval: 5000
+}
+
 const { Webpack, Patcher, Net, React, UI, Logger, Data, Components, DOM } = BdApi;
 
 
@@ -124,13 +135,8 @@ class AutoDNDOnGame {
     constructor() {
         this._config = config;
         //Save settings or load defaults
-        this.settings = BdApi.loadData(this._config.name, "settings") || {
-            inGameStatus: "dnd",
-            revertDelay: 10,
-            showToasts: true,
-            pollingInterval: 5000
-        };
-        
+        this.settings = Data.load(this._config.name, "settings") || defaultSettings;
+
         this.hasSetStatus = false;
         this.revertTimeoutId = null;
         this.boundHandlePresenceChange = this.handlePresenceChange.bind(this);
@@ -155,10 +161,38 @@ class AutoDNDOnGame {
     load() { }
 
     start() {
-        // Auto-update check using BdApi.request
-        this.checkForUpdate();
-        // Show changelog modal if version changed
-        this.showChangelog();
+        try {
+            let currentVersionInfo = {};
+            try {
+                currentVersionInfo = Object.assign({}, { version: this._config.version, hasShownChangelog: false }, Data.load("AutoDNDOnGame", "currentVersionInfo"));
+            } catch (err) {
+                currentVersionInfo = { version: this._config.version, hasShownChangelog: false };
+            }
+            if (this._config.version != currentVersionInfo.version) currentVersionInfo.hasShownChangelog = false;
+            currentVersionInfo.version = this._config.version;
+            Data.save(this._config.name, "currentVersionInfo", currentVersionInfo);
+
+            this.checkForUpdate();
+
+            if (!currentVersionInfo.hasShownChangelog) {
+                UI.showChangelogModal({
+                    title: "AutoDNDOnGame Changelog",
+                    subtitle: config.version,
+                    changes: [{
+                        title: config.changelog[0].title,
+                        type: config.changelog[0].type,
+                        items: config.changelog[0].items
+                    }]
+                });
+                currentVersionInfo.hasShownChangelog = true;
+                Data.save(this._config.name, "currentVersionInfo", currentVersionInfo);
+            }
+        }
+        catch (err) {
+            Logger.error(this._config.name, err);
+        }
+
+        settings = Object.assign({}, defaultSettings, Data.load(this._config.name, "settings"));
 
         // Retrieve the presence store from BdApi.Webpack
         this.presenceStore = Webpack.getStore("PresenceStore");
@@ -169,6 +203,8 @@ class AutoDNDOnGame {
 
         this.presenceStore.addChangeListener(this.boundHandlePresenceChange);
         // this.pollingInterval = setInterval(() => this.handlePresenceChange(), this.settings.pollingInterval);
+
+        this.saveAndUpdate();
     }
 
     stop() {
@@ -228,9 +264,17 @@ class AutoDNDOnGame {
 
         // return panel;
         return UI.buildSettingsPanel({
-            settings: this._config.defaultConfig,
-            onChange: (category, id, value) => console.log(category, id, value),
+            settings: this._config.settingsPanel,
+            onChange: (category, id, value) => {
+                settings[id] = value;
+                // Data.save(this._config.id, "settings", settings);
+                this.saveAndUpdate();
+            },
         });
+    }
+
+    saveAndUpdate() {
+        Data.save(this._config.id, "settings", this.settings);
     }
 
     // Called when the presence changes.
@@ -296,27 +340,61 @@ class AutoDNDOnGame {
     }
 
 
-    checkForUpdate() {
-        fetch(this._config.info.github_raw, { headers: { "User-Agent": "BetterDiscord" } })
-            .then(response => response.text())
-            .then(text => {
-                const versionMatch = text.match(/@version\s+([^\s]+)/);
-                if (versionMatch) {
-                    const latestVersion = versionMatch[1].trim();
-                    if (this.versionCompare(latestVersion, this.getVersion()) > 0) {
-                        UI.showConfirmationModal("Update Available", `A new version (${latestVersion}) is available. Would you like to update?`, {
-                            confirmText: "Update",
-                            cancelText: "Later",
-                            onConfirm: () => {
-                                require("electron").shell.openExternal(this._config.info.github_raw);
-                            }
-                        });
+    // checkForUpdate() {
+    //     fetch(this._config.info.github_raw, { headers: { "User-Agent": "BetterDiscord" } })
+    //         .then(response => response.text())
+    //         .then(text => {
+    //             const versionMatch = text.match(/@version\s+([^\s]+)/);
+    //             if (versionMatch) {
+    //                 const latestVersion = versionMatch[1].trim();
+    //                 if (this.versionCompare(latestVersion, this.getVersion()) > 0) {
+    //                     UI.showConfirmationModal("Update Available", `A new version (${latestVersion}) is available. Would you like to update?`, {
+    //                         confirmText: "Update",
+    //                         cancelText: "Later",
+    //                         onConfirm: () => {
+    //                             require("electron").shell.openExternal(this._config.info.github_raw);
+    //                         }
+    //                     });
+    //                 }
+    //             }
+    //         })
+    //         .catch(err => {
+    //             console.error("Failed to check for updates:", err);
+    //         });
+    // }
+
+    async checkForUpdate() {
+        try {
+            let fileContent = await (await fetch(this._config.info.github_raw, { headers: { "User-Agent": "BetterDiscord" } })).text();
+            let remoteMeta = this.parseMeta(fileContent);
+            if (this.versionCompare(remoteMeta.version, this.getVersion()) > 0) {
+                this.newUpdateNotify(remoteMeta, fileContent);
+            }
+        }
+        catch (err) {
+            Logger.error(this._config.name, err);
+        }
+
+    }
+
+    newUpdateNotify(remoteMeta, remoteFile) {
+        Logger.info(this._config.name, "A new update is available!");
+
+        UI.showConfirmationModal("Update Available", [`Update ${remoteMeta.version} is now available for AutoDNDOnGame!`, "Press Download Now to update!"], {
+            confirmText: "Download Now",
+            onConfirm: async (e) => {
+                if (remoteFile) {
+                    await new Promise(r => require("fs").writeFile(require("path").join(BdApi.Plugins.folder, `${this._config.name}.plugin.js`), remoteFile, r));
+                    try {
+                        let currentVersionInfo = Data.load(this._config.name, "currentVersionInfo");
+                        currentVersionInfo.hasShownChangelog = false;
+                        Data.save(this._config.name, "currentVersionInfo", currentVersionInfo);
+                    } catch (err) {
+                        UI.showToast("An error occurred when trying to download the update!", { type: "error" });
                     }
                 }
-            })
-            .catch(err => {
-                console.error("Failed to check for updates:", err);
-            });
+            }
+        });
     }
 
     // Compare semantic version strings.
