@@ -1,7 +1,7 @@
 /**
  * @name AutoDNDOnGame
  * @description Automatically set your status to Do Not Disturb when you launch a game
- * @version 1.0.1
+ * @version 1.0.2
  * @author Xenon Colt
  * @authorLink https://xenoncolt.me
  * @website https://github.com/xenoncolt/AutoDNDOnGame
@@ -10,13 +10,13 @@
  */
 
 const config = {
-    main: "index.js",
+    main: "AutoDNDOnGame.plugin.js",
     id: "xenoncolt",
     name: "AutoDNDOnGame",
     author: "Xenon Colt",
     authorId: "709210314230726776",
     authorLink: "https://xenoncolt.me",
-    version: "1.0.1",
+    version: "1.0.2",
     description: "Automatically set your status to Do Not Disturb when you launch a game",
     website: "https://xenoncolt.me",
     source: "https://github.com/xenoncolt/AutoDNDOnGame",
@@ -30,7 +30,7 @@ const config = {
                 link: "https://xenoncolt.me"
             }
         ],
-        version: "1.0.1",
+        version: "1.0.2",
         description: "Automatically set your status to Do Not Disturb when you launch a game",
         github: "https://github.com/xenoncolt/AutoDNDOnGame",
         invite: "vJRe78YmN8",
@@ -39,13 +39,11 @@ const config = {
     helpers: ":3",
     changelog: [
         {
-            title: "Fixed Deprecated Function And More",
+            title: "Fixed minor things",
             type: "fixed",
             items: [
-                "Fixed deprecated function usage in the plugin",
-                "Updated the plugin to use the latest BetterDiscord API",
-                "Fixed Version update not working",
-                "Fixed where changelog do not show properly"
+                "Fixed meta data parse error",
+                "Fixed changelog issue"
             ]
         }
     ],
@@ -410,14 +408,24 @@ class AutoDNDOnGame {
         return 0;
     }
 
-    // Show changelog modal if the saved version differs from the current.
-    showChangelog() {
-        const savedVersion = BdApi.loadData(this._config.id, "version");
-        if (savedVersion !== this.getVersion()) {
-            UI.showChangelogModal(this.getName(), this.getVersion(), this._config.changelog);
-            BdApi.saveData(this._config.id, "version", this.getVersion());
+    parseMeta(fileContent) {
+        const meta = {};
+        const regex = /@([a-zA-Z]+)\s+(.+)/g;
+        let match;
+        while ((match = regex.exec(fileContent)) !== null) {
+            meta[match[1]] = match[2].trim();
         }
+        return meta;
     }
+
+    // Show changelog modal if the saved version differs from the current.
+    // showChangelog() {
+    //     const savedVersion = BdApi.loadData(this._config.id, "version");
+    //     if (savedVersion !== this.getVersion()) {
+    //         UI.showChangelogModal(this.getName(), this.getVersion(), this._config.changelog);
+    //         BdApi.saveData(this._config.id, "version", this.getVersion());
+    //     }
+    // }
 }
 
 module.exports = AutoDNDOnGame;
