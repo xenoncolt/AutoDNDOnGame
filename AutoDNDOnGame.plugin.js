@@ -1,7 +1,7 @@
 /**
  * @name AutoDNDOnGame
  * @description Automatically set your status to Do Not Disturb when you launch a game
- * @version 1.0.2
+ * @version 1.0.3
  * @author Xenon Colt
  * @authorLink https://xenoncolt.me
  * @website https://github.com/xenoncolt/AutoDNDOnGame
@@ -16,7 +16,7 @@ const config = {
     author: "Xenon Colt",
     authorId: "709210314230726776",
     authorLink: "https://xenoncolt.me",
-    version: "1.0.2",
+    version: "1.0.3",
     description: "Automatically set your status to Do Not Disturb when you launch a game",
     website: "https://xenoncolt.me",
     source: "https://github.com/xenoncolt/AutoDNDOnGame",
@@ -30,7 +30,7 @@ const config = {
                 link: "https://xenoncolt.me"
             }
         ],
-        version: "1.0.2",
+        version: "1.0.3",
         description: "Automatically set your status to Do Not Disturb when you launch a game",
         github: "https://github.com/xenoncolt/AutoDNDOnGame",
         invite: "vJRe78YmN8",
@@ -39,11 +39,11 @@ const config = {
     helpers: ":3",
     changelog: [
         {
-            title: "Fixed minor things",
+            title: "Fixed BD compatibility issue",
             type: "fixed",
             items: [
-                "Fixed meta data parse error",
-                "Fixed changelog issue"
+                "Prevent plugin from breaking BD",
+                "Prevent plugin from spamming status change"
             ]
         }
     ],
@@ -137,6 +137,9 @@ class AutoDNDOnGame {
 
         this.hasSetStatus = false;
         this.revertTimeoutId = null;
+        this.statusChangeCount = 0;
+        this.statusChangeThreshold = 5;
+        this.statusChangeResetTime = null;
         this.boundHandlePresenceChange = this.handlePresenceChange.bind(this);
     }
 
@@ -194,6 +197,9 @@ class AutoDNDOnGame {
 
         // Retrieve the presence store from BdApi.Webpack
         this.presenceStore = Webpack.getStore("PresenceStore");
+        this.CurrentUserStore = Webpack.getModule(m => m?.getCurrentUser, { first: true });
+        this.UserSettingsProtoStore = Webpack.getModule(m => m && typeof m.getName === "function" && m.getName() === "UserSettingsProtoStore", { first: true, searchExports: true });
+        this.UserSettingsProtoUtils = Webpack.getModule(m => m.ProtoClass && m.ProtoClass.typeName.endsWith(".PreloadedUserSettings"), { first: true, searchExports: true });
         if (!this.presenceStore) {
             UI.showToast("PresenceStore not found. The plugin cannot function properly.", { type: "error" });
             return;
@@ -203,6 +209,12 @@ class AutoDNDOnGame {
         // this.pollingInterval = setInterval(() => this.handlePresenceChange(), this.settings.pollingInterval);
 
         this.saveAndUpdate();
+
+        // Counting status change 
+        this.statusChangeReset = setInterval(() => {
+            this.statusChangeCount = 0;
+            Logger.info(this._config.name, "Status change count reset");
+        }, 10 * 60 * 1000);
     }
 
     stop() {
@@ -217,10 +229,10 @@ class AutoDNDOnGame {
             this.updateStatus("online");
             this.hasSetStatus = false;
         }
-        // if (this.pollingInterval) {
-        //     clearInterval(this.pollingInterval);
-        //     this.pollingInterval = null;
-        // }
+        if (this.pollingInterval) {
+            clearInterval(this.pollingInterval);
+            this.pollingInterval = null;
+        }
     }
 
     getSettingsPanel() {
@@ -277,11 +289,8 @@ class AutoDNDOnGame {
 
     // Called when the presence changes.
     handlePresenceChange() {
-        const CurrentUserStore = Webpack.getModule((m) => m?.getCurrentUser, {
-            first: true,
-        });
-        if (!CurrentUserStore) return;
-        const currentUser = CurrentUserStore.getCurrentUser();
+        if (!this.CurrentUserStore) return;
+        const currentUser = this.CurrentUserStore.getCurrentUser();
         if (!currentUser) return;
         const activities = this.presenceStore.getActivities(currentUser.id);
         // Debug log 
@@ -294,11 +303,14 @@ class AutoDNDOnGame {
             if (this.currentStatus() !== this.settings.inGameStatus) {
                 this.updateStatus(this.settings.inGameStatus);
                 this.hasSetStatus = true;
+                this.statusChangeCount++;
                 if (this.settings.showToasts) UI.showToast(`Game detected. Changing status to ${this.settings.inGameStatus}`);
                 if (this.revertTimeoutID) {
                     clearTimeout(this.revertTimeoutID);
                     this.revertTimeoutID = null;
                 }
+            } else {
+                Logger.info(this._config.name, "Status change limit reached. Skipping status change");
             }
         } else {
             if (this.hasSetStatus) {
@@ -319,20 +331,16 @@ class AutoDNDOnGame {
     }
 
     currentStatus() {
-        const UserSettingsProtoStore = Webpack.getModule(
-            m => m && typeof m.getName === "function" && m.getName() === "UserSettingsProtoStore",
-            { first: true, searchExports: true }
-        );
-        return UserSettingsProtoStore.settings.status.status.value;
+        return this.UserSettingsProtoStore.settings.status.status.value;
     }
 
     // Update user status
     updateStatus(toStatus) {
-        const UserSettingsProtoUtils = Webpack.getModule(
-            m => m.ProtoClass && m.ProtoClass.typeName.endsWith(".PreloadedUserSettings"),
-            { first: true, searchExports: true }
-        );
-        UserSettingsProtoUtils.updateAsync("status", statusSetting => {
+        if (this.statusChangeCount >= this.statusChangeThreshold) {
+            Logger.info(this._config.name, "Status change limit reached. Skipping status change");
+        }
+
+        this.UserSettingsProtoUtils.updateAsync("status", statusSetting => {
             statusSetting.status.value = toStatus;
         }, 0);
     }
