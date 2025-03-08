@@ -11,16 +11,8 @@
 
 const config = {
     main: "AutoDNDOnGame.plugin.js",
-    id: "xenoncolt",
-    name: "AutoDNDOnGame",
-    author: "Xenon Colt",
     authorId: "709210314230726776",
-    authorLink: "https://xenoncolt.me",
-    version: "1.0.4",
-    description: "Automatically set your status to Do Not Disturb when you launch a game",
     website: "https://xenoncolt.me",
-    source: "https://github.com/xenoncolt/AutoDNDOnGame",
-    invite: "vJRe78YmN8",
     info: {
         name: "AutoDNDOnGame",
         authors: [
@@ -30,7 +22,7 @@ const config = {
                 link: "https://xenoncolt.me"
             }
         ],
-        version: "1.0.4",
+        version: "1.0.5",
         description: "Automatically set your status to Do Not Disturb when you launch a game",
         github: "https://github.com/xenoncolt/AutoDNDOnGame",
         invite: "vJRe78YmN8",
@@ -39,25 +31,35 @@ const config = {
     helpers: ":3",
     changelog: [
         {
-            title: "Fixed Few Things",
-            type: "fixed",
+            title: "New Features & Improvements",
+            type: "added",
             items: [
-                "Prevent plugin from breaking BD",
-                "Prevent plugin from spamming status change",
-                "Fixed status change limit not working",
-                "Fixed where save settings not working",
+                "Added color to the status change toast notifications",
+                "Refactored the code",
+                "",
+                "",
             ]
         },
         {
-            title: "Changed Few Things",
-            type: "changed",
+            title: "Fixed Few Things",
+            type: "fixed",
             items: [
-                "Changed the way get to activities",
-                "Changed the way to update status",
-                "Instead of using own version manager use BD's Semver",
-                "Changed the way to show changelog"
+                "Removed \"Back to online Delay\" from the settings panel",
+                "Removed polling interval related all thing coz its not needed",
+                "",
+                "",
             ]
-        }
+        },
+        // {
+        //     title: "Changed Few Things",
+        //     type: "changed",
+        //     items: [
+        //         "",
+        //         "",
+        //         "",
+        //         ""
+        //     ]
+        // }
     ],
     settingsPanel: [
         {
@@ -108,23 +110,6 @@ const config = {
             note: "Should the plugin show a notification when it changes your status?",
             id: "showToasts",
             value: () => settings.showToasts,
-        },
-        {
-            type: "slider",
-            name: "Back to Online Delay:",
-            note: "How long should the plugin wait before setting your status back to online after you close a game?",
-            id: "pollingInterval",
-            value: () => settings.pollingInterval,
-            min: 5000,
-            max: 60000,
-            units: "ms",
-            markers: [
-                5000,
-                15000,
-                30000,
-                45000,
-                60000
-            ]
         }
     ]
 };
@@ -134,8 +119,7 @@ let settings = {};
 let defaultSettings = {
     inGameStatus: "dnd",
     revertDelay: 10,
-    showToasts: true,
-    pollingInterval: 5000
+    showToasts: true
 }
 
 const { Webpack, UI, Logger, Data, Utils } = BdApi;
@@ -145,7 +129,7 @@ class AutoDNDOnGame {
     constructor() {
         this._config = config;
         //Save settings or load defaults
-        this.settings = Data.load(this._config.name, "settings") || defaultSettings;
+        this.settings = Data.load(this._config.info.name, "settings") || defaultSettings;
         this.getSettingsPanel();
 
         this.hasSetStatus = false;
@@ -157,33 +141,33 @@ class AutoDNDOnGame {
         try {
             let currentVersionInfo = {};
             try {
-                currentVersionInfo = Object.assign({}, { version: this._config.version, hasShownChangelog: false }, Data.load("AutoDNDOnGame", "currentVersionInfo"));
+                currentVersionInfo = Object.assign({}, { version: this._config.info.version, hasShownChangelog: false }, Data.load("AutoDNDOnGame", "currentVersionInfo"));
             } catch (err) {
-                currentVersionInfo = { version: this._config.version, hasShownChangelog: false };
+                currentVersionInfo = { version: this._config.info.version, hasShownChangelog: false };
             }
-            if (this._config.version != currentVersionInfo.version) currentVersionInfo.hasShownChangelog = false;
-            currentVersionInfo.version = this._config.version;
-            Data.save(this._config.name, "currentVersionInfo", currentVersionInfo);
+            if (this._config.info.version != currentVersionInfo.version) currentVersionInfo.hasShownChangelog = false;
+            currentVersionInfo.version = this._config.info.version;
+            Data.save(this._config.info.name, "currentVersionInfo", currentVersionInfo);
 
             this.checkForUpdate();
 
             if (!currentVersionInfo.hasShownChangelog) {
                 UI.showChangelogModal({
                     title: "AutoDNDOnGame Changelog",
-                    subtitle: config.version,
-                    changes: config.changelog
+                    subtitle: this._config.info.version,
+                    changes: this._config.changelog
                 });
                 currentVersionInfo.hasShownChangelog = true;
-                Data.save(this._config.name, "currentVersionInfo", currentVersionInfo);
+                Data.save(this._config.info.name, "currentVersionInfo", currentVersionInfo);
             }
         }
         catch (err) {
-            Logger.error(this._config.name, err);
+            Logger.error(this._config.info.name, err);
         }
     }
 
     start() {
-        settings = Object.assign({}, defaultSettings, Data.load(this._config.name, "settings"));
+        settings = Object.assign({}, defaultSettings, Data.load(this._config.info.name, "settings"));
 
         // Retrieve the presence store from BdApi.Webpack
         this.presenceStore = Webpack.getStore("PresenceStore");
@@ -202,7 +186,7 @@ class AutoDNDOnGame {
         // Counting status change 
         this.statusChangeReset = setInterval(() => {
             this.statusChangeCount = 0;
-            Logger.info(this._config.name, "Status change count reset");
+            Logger.info(this._config.info.name, "Status change count reset");
         }, 10 * 60 * 1000);
     }
 
@@ -239,7 +223,7 @@ class AutoDNDOnGame {
     }
 
     saveAndUpdate() {
-        Data.save(this._config.name, "settings", settings);
+        Data.save(this._config.info.name, "settings", settings);
     }
 
     // Called when the presence changes.
@@ -259,13 +243,13 @@ class AutoDNDOnGame {
                     this.updateStatus(this.settings.inGameStatus);
                     this.hasSetStatus = true;
                     this.statusChangeCount++;
-                    if (this.settings.showToasts) UI.showToast(`Game detected. Changing status to ${this.settings.inGameStatus}`);
+                    if (this.settings.showToasts) UI.showToast(`Game detected. Changing status to ${this.settings.inGameStatus}`, { type: "danger" });
                     if (this.revertTimeoutID) {
                         clearTimeout(this.revertTimeoutID);
                         this.revertTimeoutID = null;
                     }
                 } else {
-                    Logger.info(this._config.name, "Status change limit reached. Skipping status change");
+                    Logger.info(this._config.info.name, "Status change limit reached. Skipping status change");
                 }
             }
         } else {
@@ -279,7 +263,7 @@ class AutoDNDOnGame {
                     if (!stillPlaying) {
                         this.updateStatus("online");
                         this.hasSetStatus = false;
-                        if (this.settings.showToasts) UI.showToast("No game detected. Reverting status to online.");
+                        if (this.settings.showToasts) UI.showToast("No game detected. Reverting status to online.", { type: "success" });
                     }
                 }, this.settings.revertDelay * 1000);
             }
@@ -293,7 +277,7 @@ class AutoDNDOnGame {
     // Update user status
     updateStatus(toStatus) {
         if (this.statusChangeCount >= this.statusChangeThreshold) {
-            Logger.info(this._config.name, "Status change limit reached. Skipping status change");
+            Logger.info(this._config.info.name, "Status change limit reached. Skipping status change");
             return;
         }
 
@@ -308,28 +292,28 @@ class AutoDNDOnGame {
         try {
             let fileContent = await (await fetch(this._config.info.github_raw, { headers: { "User-Agent": "BetterDiscord" } })).text();
             let remoteMeta = this.parseMeta(fileContent);
-            if (Utils.semverCompare(this._config.version, remoteMeta.version) > 0) {
+            if (Utils.semverCompare(this._config.info.version, remoteMeta.version) > 0) {
                 this.newUpdateNotify(remoteMeta, fileContent);
             }
         }
         catch (err) {
-            Logger.error(this._config.name, err);
+            Logger.error(this._config.info.name, err);
         }
 
     }
 
     newUpdateNotify(remoteMeta, remoteFile) {
-        Logger.info(this._config.name, "A new update is available!");
+        Logger.info(this._config.info.name, "A new update is available!");
 
         UI.showConfirmationModal("Update Available", [`Update ${remoteMeta.version} is now available for AutoDNDOnGame!`, "Press Download Now to update!"], {
             confirmText: "Download Now",
             onConfirm: async (e) => {
                 if (remoteFile) {
-                    await new Promise(r => require("fs").writeFile(require("path").join(BdApi.Plugins.folder, `${this._config.name}.plugin.js`), remoteFile, r));
+                    await new Promise(r => require("fs").writeFile(require("path").join(BdApi.Plugins.folder, `${this._config.info.name}.plugin.js`), remoteFile, r));
                     try {
-                        let currentVersionInfo = Data.load(this._config.name, "currentVersionInfo");
+                        let currentVersionInfo = Data.load(this._config.info.name, "currentVersionInfo");
                         currentVersionInfo.hasShownChangelog = false;
-                        Data.save(this._config.name, "currentVersionInfo", currentVersionInfo);
+                        Data.save(this._config.info.name, "currentVersionInfo", currentVersionInfo);
                     } catch (err) {
                         UI.showToast("An error occurred when trying to download the update!", { type: "error" });
                     }
