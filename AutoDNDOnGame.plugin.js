@@ -1,7 +1,7 @@
 /**
  * @name AutoDNDOnGame
  * @description Automatically set your status to Do Not Disturb when you launch a game
- * @version 1.0.4
+ * @version 1.0.5
  * @author Xenon Colt
  * @authorLink https://xenoncolt.me
  * @website https://github.com/xenoncolt/AutoDNDOnGame
