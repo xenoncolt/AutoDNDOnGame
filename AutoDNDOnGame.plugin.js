@@ -34,22 +34,20 @@ const config = {
             title: "New Features & Improvements",
             type: "added",
             items: [
-                "Added color to the status change toast notifications",
-                "Refactored the code",
-                "",
-                "",
+                "Remove update checking functionality to streamline plugin performance",
+                "Automatically update the plugin using BD's built-in updater",
             ]
         },
-        {
-            title: "Fixed Few Things",
-            type: "fixed",
-            items: [
-                "Removed \"Back to online Delay\" from the settings panel",
-                "Removed polling interval related all thing coz its not needed",
-                "",
-                "",
-            ]
-        },
+        // {
+        //     title: "Fixed Few Things",
+        //     type: "fixed",
+        //     items: [
+        //         "Removed \"Back to online Delay\" from the settings panel",
+        //         "Removed polling interval related all thing coz its not needed",
+        //         "",
+        //         "",
+        //     ]
+        // },
         // {
         //     title: "Changed Few Things",
         //     type: "changed",
@@ -148,8 +146,6 @@ class AutoDNDOnGame {
             if (this._config.info.version != currentVersionInfo.version) currentVersionInfo.hasShownChangelog = false;
             currentVersionInfo.version = this._config.info.version;
             Data.save(this._config.info.name, "currentVersionInfo", currentVersionInfo);
-
-            this.checkForUpdate();
 
             if (!currentVersionInfo.hasShownChangelog) {
                 UI.showChangelogModal({
@@ -286,50 +282,6 @@ class AutoDNDOnGame {
         UserSettingsProtoUtils.updateAsync("status", statusSetting => {
             statusSetting.status.value = toStatus;
         }, 0);
-    }
-
-    async checkForUpdate() {
-        try {
-            let fileContent = await (await fetch(this._config.info.github_raw, { headers: { "User-Agent": "BetterDiscord" } })).text();
-            let remoteMeta = this.parseMeta(fileContent);
-            if (Utils.semverCompare(this._config.info.version, remoteMeta.version) > 0) {
-                this.newUpdateNotify(remoteMeta, fileContent);
-            }
-        }
-        catch (err) {
-            Logger.error(this._config.info.name, err);
-        }
-
-    }
-
-    newUpdateNotify(remoteMeta, remoteFile) {
-        Logger.info(this._config.info.name, "A new update is available!");
-
-        UI.showConfirmationModal("Update Available", [`Update ${remoteMeta.version} is now available for AutoDNDOnGame!`, "Press Download Now to update!"], {
-            confirmText: "Download Now",
-            onConfirm: async (e) => {
-                if (remoteFile) {
-                    await new Promise(r => require("fs").writeFile(require("path").join(BdApi.Plugins.folder, `${this._config.info.name}.plugin.js`), remoteFile, r));
-                    try {
-                        let currentVersionInfo = Data.load(this._config.info.name, "currentVersionInfo");
-                        currentVersionInfo.hasShownChangelog = false;
-                        Data.save(this._config.info.name, "currentVersionInfo", currentVersionInfo);
-                    } catch (err) {
-                        UI.showToast("An error occurred when trying to download the update!", { type: "error" });
-                    }
-                }
-            }
-        });
-    }
-
-    parseMeta(fileContent) {
-        const meta = {};
-        const regex = /@([a-zA-Z]+)\s+(.+)/g;
-        let match;
-        while ((match = regex.exec(fileContent)) !== null) {
-            meta[match[1]] = match[2].trim();
-        }
-        return meta;
     }
 }
 
