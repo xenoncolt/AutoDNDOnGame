@@ -1,7 +1,7 @@
 /**
  * @name AutoDNDOnGame
  * @description Automatically set your status to Do Not Disturb when you launch a game
- * @version 1.0.6
+ * @version 1.0.7
  * @author Xenon Colt
  * @authorLink https://xenoncolt.me
  * @website https://github.com/xenoncolt/AutoDNDOnGame
@@ -22,7 +22,7 @@ const config = {
                 link: "https://xenoncolt.me"
             }
         ],
-        version: "1.0.6",
+        version: "1.0.7",
         description: "Automatically set your status to Do Not Disturb when you launch a game",
         github: "https://github.com/xenoncolt/AutoDNDOnGame",
         invite: "vJRe78YmN8",
@@ -30,24 +30,24 @@ const config = {
     },
     helpers: ":3",
     changelog: [
-        {
-            title: "New Features & Improvements",
-            type: "added",
-            items: [
-                "Remove update checking functionality to streamline plugin performance",
-                "Automatically update the plugin using BD's built-in updater",
-            ]
-        },
         // {
-        //     title: "Fixed Few Things",
-        //     type: "fixed",
+        //     title: "New Features & Improvements",
+        //     type: "added",
         //     items: [
-        //         "Removed \"Back to online Delay\" from the settings panel",
-        //         "Removed polling interval related all thing coz its not needed",
-        //         "",
-        //         "",
+        //         "Remove update checking functionality to streamline plugin performance",
+        //         "Automatically update the plugin using BD's built-in updater",
         //     ]
         // },
+        {
+            title: "Fixed Few Things",
+            type: "fixed",
+            items: [
+                "Fixed settings UI not updated after changing value",
+                "Fixed a type mistake where status change count was not being reset",
+                "",
+                "",
+            ]
+        },
         // {
         //     title: "Changed Few Things",
         //     type: "changed",
@@ -126,8 +126,10 @@ const { Webpack, UI, Logger, Data, Utils } = BdApi;
 class AutoDNDOnGame {
     constructor() {
         this._config = config;
+        
         //Save settings or load defaults
         this.settings = Data.load(this._config.info.name, "settings") || defaultSettings;
+        settings = this.settings; // ahhhh my brain is not braining 
         this.getSettingsPanel();
 
         this.hasSetStatus = false;
@@ -163,7 +165,8 @@ class AutoDNDOnGame {
     }
 
     start() {
-        settings = Object.assign({}, defaultSettings, Data.load(this._config.info.name, "settings"));
+        settings = Object.assign(this.settings, defaultSettings, Data.load(this._config.info.name, "settings"));
+        settings = this.settings;  // synconize with global
 
         // Retrieve the presence store from BdApi.Webpack
         this.presenceStore = Webpack.getStore("PresenceStore");
@@ -180,7 +183,7 @@ class AutoDNDOnGame {
         this.saveAndUpdate();
 
         // Counting status change 
-        this.statusChangeReset = setInterval(() => {
+        this.statusChangeResetInterval = setInterval(() => {
             this.statusChangeCount = 0;
             Logger.info(this._config.info.name, "Status change count reset");
         }, 10 * 60 * 1000);
@@ -211,7 +214,8 @@ class AutoDNDOnGame {
             value: () => this.settings[setting.id]
             })),
             onChange: (category, id, value) => {
-                settings[id] = value;
+                this.settings[id] = value; // this is for instance
+                settings[id] = value;  // this is for global
                 // Data.save(this._config.id, "settings", settings);
                 this.saveAndUpdate();
             },
@@ -219,7 +223,7 @@ class AutoDNDOnGame {
     }
 
     saveAndUpdate() {
-        Data.save(this._config.info.name, "settings", settings);
+        Data.save(this._config.info.name, "settings", this.settings);
     }
 
     // Called when the presence changes.
