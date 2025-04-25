@@ -1,7 +1,7 @@
 /**
  * @name AutoDNDOnGame
  * @description Automatically set your status to Do Not Disturb when you launch a game
- * @version 1.0.7
+ * @version 1.0.8
  * @author Xenon Colt
  * @authorLink https://xenoncolt.me
  * @website https://github.com/xenoncolt/AutoDNDOnGame
@@ -22,7 +22,7 @@ const config = {
                 link: "https://xenoncolt.me"
             }
         ],
-        version: "1.0.7",
+        version: "1.0.8",
         description: "Automatically set your status to Do Not Disturb when you launch a game",
         github: "https://github.com/xenoncolt/AutoDNDOnGame",
         invite: "vJRe78YmN8",
@@ -43,21 +43,19 @@ const config = {
             type: "fixed",
             items: [
                 "Fixed settings UI not updated after changing value",
-                "Fixed a type mistake where status change count was not being reset",
-                "",
-                "",
+                "Fixed a typo mistake where status change count was not being reset",
+                "Removed few useless logic... i don't remember why i used that",
+                "Again a typo mistake sry for that..Fixed revert timeout not working properly",
             ]
         },
-        // {
-        //     title: "Changed Few Things",
-        //     type: "changed",
-        //     items: [
-        //         "",
-        //         "",
-        //         "",
-        //         ""
-        //     ]
-        // }
+        {
+            title: "Changed Few Things",
+            type: "changed",
+            items: [
+                "Changed complex way to save settings -> simple way",
+                "I have another idea but i will do later coz i have to test it more",
+            ]
+        }
     ],
     settingsPanel: [
         {
@@ -65,7 +63,6 @@ const config = {
             name: "Change Status To:",
             note: "What status should be set when you launch a game?",
             id: "inGameStatus",
-            value: () => settings.inGameStatus,
             options: [
                 {
                     name: "Do Not Disturb",
@@ -86,7 +83,6 @@ const config = {
             name: "Back to Online Delay:",
             note: "How long should the plugin wait before setting your status back to online after you close a game?",
             id: "revertDelay",
-            value: () => settings.revertDelay,
             min: 5,
             max: 120,
             units: "s",
@@ -107,12 +103,11 @@ const config = {
             name: "Show Notification",
             note: "Should the plugin show a notification when it changes your status?",
             id: "showToasts",
-            value: () => settings.showToasts,
         }
     ]
 };
 
-let settings = {};
+// let settings = {};
 
 let defaultSettings = {
     inGameStatus: "dnd",
@@ -129,8 +124,8 @@ class AutoDNDOnGame {
         
         //Save settings or load defaults
         this.settings = Data.load(this._config.info.name, "settings") || defaultSettings;
-        settings = this.settings; // ahhhh my brain is not braining 
-        this.getSettingsPanel();
+        // settings = this.settings; // ahhhh my brain is not braining 
+        // this.getSettingsPanel();
 
         this.hasSetStatus = false;
         this.revertTimeoutId = null;
@@ -165,8 +160,8 @@ class AutoDNDOnGame {
     }
 
     start() {
-        settings = Object.assign(this.settings, defaultSettings, Data.load(this._config.info.name, "settings"));
-        settings = this.settings;  // synconize with global
+        this.settings = Object.assign(this.settings, defaultSettings, Data.load(this._config.info.name, "settings"));
+        // settings = this.settings;  // synconize with global
 
         // Retrieve the presence store from BdApi.Webpack
         this.presenceStore = Webpack.getStore("PresenceStore");
@@ -215,7 +210,7 @@ class AutoDNDOnGame {
             })),
             onChange: (category, id, value) => {
                 this.settings[id] = value; // this is for instance
-                settings[id] = value;  // this is for global
+                // settings[id] = value;  // this is for global
                 // Data.save(this._config.id, "settings", settings);
                 this.saveAndUpdate();
             },
@@ -244,9 +239,9 @@ class AutoDNDOnGame {
                     this.hasSetStatus = true;
                     this.statusChangeCount++;
                     if (this.settings.showToasts) UI.showToast(`Game detected. Changing status to ${this.settings.inGameStatus}`, { type: "danger" });
-                    if (this.revertTimeoutID) {
-                        clearTimeout(this.revertTimeoutID);
-                        this.revertTimeoutID = null;
+                    if (this.revertTimeoutId) {
+                        clearTimeout(this.revertTimeoutId);
+                        this.revertTimeoutId = null;
                     }
                 } else {
                     Logger.info(this._config.info.name, "Status change limit reached. Skipping status change");
@@ -254,8 +249,8 @@ class AutoDNDOnGame {
             }
         } else {
             if (this.hasSetStatus) {
-                if (this.revertTimeoutID) clearTimeout(this.revertTimeoutID);
-                this.revertTimeoutID = setTimeout(() => {
+                if (this.revertTimeoutId) clearTimeout(this.revertTimeoutId);
+                this.revertTimeoutId = setTimeout(() => {
                     const updatedActivities = this.presenceStore.getActivities(currentUser.id);
                     const stillPlaying =
                         Array.isArray(updatedActivities) &&
