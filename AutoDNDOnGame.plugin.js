@@ -1,7 +1,7 @@
 /**
  * @name AutoDNDOnGame
  * @description Automatically set your status to Do Not Disturb when you launch a game
- * @version 1.0.8
+ * @version 1.1.0
  * @author Xenon Colt
  * @authorLink https://xenoncolt.me
  * @website https://github.com/xenoncolt/AutoDNDOnGame
@@ -22,7 +22,7 @@ const config = {
                 link: "https://xenoncolt.me"
             }
         ],
-        version: "1.0.8",
+        version: "1.1.0",
         description: "Automatically set your status to Do Not Disturb when you launch a game",
         github: "https://github.com/xenoncolt/AutoDNDOnGame",
         invite: "vJRe78YmN8",
@@ -30,30 +30,26 @@ const config = {
     },
     helpers: ":3",
     changelog: [
-        // {
-        //     title: "New Features & Improvements",
-        //     type: "added",
-        //     items: [
-        //         "Remove update checking functionality to streamline plugin performance",
-        //         "Automatically update the plugin using BD's built-in updater",
-        //     ]
-        // },
+        {
+            title: "New Features & Improvements",
+            type: "added",
+            items: [
+                "Added a new setting where you can set your status to online when Discord starts",
+            ]
+        },
         {
             title: "Fixed Few Things",
             type: "fixed",
             items: [
-                "Fixed settings UI not updated after changing value",
-                "Fixed a typo mistake where status change count was not being reset",
-                "Removed few useless logic... i don't remember why i used that",
-                "Again a typo mistake sry for that..Fixed revert timeout not working properly",
+                "Fixed `Change status to :` UI problem",
+                "Fixed problem when discord force closes where it doesn't set your status back to online",
             ]
         },
         {
             title: "Changed Few Things",
             type: "changed",
             items: [
-                "Changed complex way to save settings -> simple way",
-                "I have another idea but i will do later coz i have to test it more",
+                "Changed settings UI",
             ]
         }
     ],
@@ -63,18 +59,22 @@ const config = {
             name: "Change Status To:",
             note: "What status should be set when you launch a game?",
             id: "inGameStatus",
+            value: "dnd",
             options: [
                 {
                     name: "Do Not Disturb",
-                    value: "dnd"
+                    value: "dnd",
+                    color: "#6C0F0F"
                 },
                 {
                     name: "Invisible",
-                    value: "invisible"
+                    value: "invisible",
+                    color: "#242222"
                 },
                 {
                     name: "Idle",
-                    value: "idle"
+                    value: "idle",
+                    color: "#BB9C00"
                 }
             ]
         },
@@ -86,6 +86,7 @@ const config = {
             min: 5,
             max: 120,
             units: "s",
+            value: 10,
             markers: [
                 5,
                 15,
@@ -103,6 +104,14 @@ const config = {
             name: "Show Notification",
             note: "Should the plugin show a notification when it changes your status?",
             id: "showToasts",
+            value: true
+        },
+        {
+            type: "switch",
+            id: "startupOnline",
+            name: "Set Online on Startup",
+            note: "Change your status to online when Discord starts if you're not already online",
+            value: false,
         }
     ]
 };
@@ -112,7 +121,8 @@ const config = {
 let defaultSettings = {
     inGameStatus: "dnd",
     revertDelay: 10,
-    showToasts: true
+    showToasts: true,
+    startupOnline: false
 }
 
 const { Webpack, UI, Logger, Data, Utils } = BdApi;
@@ -123,7 +133,7 @@ class AutoDNDOnGame {
         this._config = config;
         
         //Save settings or load defaults
-        this.settings = Data.load(this._config.info.name, "settings") || defaultSettings;
+        this.settings = Data.load(this._config.info.name, "settings");
         // settings = this.settings; // ahhhh my brain is not braining 
         // this.getSettingsPanel();
 
@@ -160,7 +170,8 @@ class AutoDNDOnGame {
     }
 
     start() {
-        this.settings = Object.assign(this.settings, defaultSettings, Data.load(this._config.info.name, "settings"));
+        this.settings = Data.load(this._config.info.name, "settings") || defaultSettings;
+        // this.settings = Data.load(this._config.info.name, "settings") ? Data.load(this._config.info.name, "settings") : defaultSettings;
         // settings = this.settings;  // synconize with global
 
         // Retrieve the presence store from BdApi.Webpack
@@ -172,10 +183,22 @@ class AutoDNDOnGame {
             return;
         }
 
+        if (this.settings.startupOnline) {
+            const currentStatus = this.currentStatus();
+            if (currentStatus !== 'online') {
+                this.updateStatus("online");
+                if (this.settings.showToasts) {
+                    UI.showToast("Status changed to online on startup", { type: "success" });
+                }
+                Logger.info(this._config.info.name, "Changed status to online on startup");
+            }
+        }
+
         this.presenceStore.addChangeListener(this.boundHandlePresenceChange);
         // this.pollingInterval = setInterval(() => this.handlePresenceChange(), this.settings.pollingInterval);
 
-        this.saveAndUpdate();
+        // this.saveAndUpdate(); nah.. i prefer logic :3
+        if (Data.load(this._config.info.name, "settings") == null) this.saveAndUpdate();
 
         // Counting status change 
         this.statusChangeResetInterval = setInterval(() => {
@@ -203,11 +226,17 @@ class AutoDNDOnGame {
     }
 
     getSettingsPanel() {
+        for (const setting of this._config.settingsPanel) {
+            if (this.settings[setting.id] !== undefined) {
+                setting.value = this.settings[setting.id];
+            }
+        }
+
+        // No fking idea why that was not worked but its working fineeee.. wtf.. it should be working fine on both methods..
+        // nvm.. i don't wanna waste my brain anymore.. [if it works dont touch it] :3
+
         return UI.buildSettingsPanel({
-            settings: this._config.settingsPanel.map(setting => ({
-                ...setting,
-            value: () => this.settings[setting.id]
-            })),
+            settings: this._config.settingsPanel,
             onChange: (category, id, value) => {
                 this.settings[id] = value; // this is for instance
                 // settings[id] = value;  // this is for global
