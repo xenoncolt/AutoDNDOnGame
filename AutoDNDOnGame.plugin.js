@@ -1,7 +1,7 @@
 /**
  * @name AutoDNDOnGame
  * @description Automatically set your status to Do Not Disturb when you launch a game
- * @version 1.1.0
+ * @version 1.2.0
  * @author Xenon Colt
  * @authorLink https://xenoncolt.live
  * @website https://github.com/xenoncolt/AutoDNDOnGame
@@ -21,7 +21,7 @@ const config = {
                 link: "https://xenoncolt.live"
             }
         ],
-        version: "1.1.0",
+        version: "1.2.0",
         description: "Automatically set your status to Do Not Disturb when you launch a game",
         github: "https://github.com/xenoncolt/AutoDNDOnGame",
         invite: "vJRe78YmN8",
@@ -33,22 +33,22 @@ const config = {
             title: "New Features & Improvements",
             type: "added",
             items: [
-                "Added a new setting where you can set your status to online when Discord starts",
+                "Added an option in Settings to choose which game DND will work for (now you can make it work only for specific games)",
             ]
-        },
-        {
-            title: "Fixed Few Things",
-            type: "fixed",
-            items: [
-                "Fixed `Change status to :` UI problem",
-                "Fixed problem when discord force closes where it doesn't set your status back to online",
-            ]
-        },
+         },
+        // {
+        //     title: "Fixed Few Things",
+        //     type: "fixed",
+        //     items: [
+        //         "Fixed `Change status to :` UI problem",
+        //         "Fixed problem when discord force closes where it doesn't set your status back to online",
+        //     ]
+        // },
         {
             title: "Changed Few Things",
             type: "changed",
             items: [
-                "Changed settings UI",
+                "Migrated to new BetterDiscord v1.3.0 api",
             ]
         }
     ],
@@ -110,7 +110,15 @@ const config = {
             id: "startupOnline",
             name: "Set Online on Startup",
             note: "Change your status to online when Discord starts if you're not already online",
-            value: false,
+            value: true,
+        },
+        {
+            type: "category",
+            name: "Games List",
+            id: "games",
+            collapsible: true,
+            shown: false,
+            settings: []
         }
     ]
 };
@@ -121,7 +129,7 @@ let defaultSettings = {
     inGameStatus: "dnd",
     revertDelay: 10,
     showToasts: true,
-    startupOnline: false
+    startupOnline: true
 }
 
 const { Webpack, UI, Logger, Data, Utils } = BdApi;
@@ -130,7 +138,7 @@ const { Webpack, UI, Logger, Data, Utils } = BdApi;
 class AutoDNDOnGame {
     constructor() {
         this._config = config;
-        this.settings = Data.load(this._config.info.name, "settings");
+        this.settings;
 
         this.hasSetStatus = false;
         this.revertTimeoutId = null;
@@ -167,9 +175,9 @@ class AutoDNDOnGame {
     start() {
         this.settings = Data.load(this._config.info.name, "settings") || defaultSettings;
 
-        this.presenceStore = Webpack.getStore("PresenceStore");
-        this.CurrentUserStore = Webpack.getStore("UserStore");
-        this.UserSettingsProtoStore = Webpack.getStore("UserSettingsProtoStore");
+        this.presenceStore = Webpack.Stores.PresenceStore;
+        this.CurrentUserStore = Webpack.Stores.UserStore;
+        this.UserSettingsProtoStore = Webpack.Stores.UserSettingsProtoStore;
         if (!this.presenceStore) {
             UI.showToast("PresenceStore not found. The plugin cannot function properly.", { type: "error" });
             return;
@@ -188,7 +196,9 @@ class AutoDNDOnGame {
 
         this.presenceStore.addChangeListener(this.boundHandlePresenceChange);
 
-        if (Data.load(this._config.info.name, "settings") == null) this.saveAndUpdate();
+        if (Data.load(this._config.info.name, "settings") == null) {
+            Data.save(this._config.info.name, "settings", this.settings);
+        }
 
         this.statusChangeResetInterval = setInterval(() => {
             this.statusChangeCount = 0;
@@ -215,6 +225,23 @@ class AutoDNDOnGame {
     }
 
     getSettingsPanel() {
+        const games = Webpack.Stores.RunningGameStore.getGamesSeen().map(g => {
+            return {
+                name: g.name,
+                id: g.id,
+            }
+        });
+
+        this._config.settingsPanel.find(cat => cat.id === "games").settings = games.map(g => {
+            return {
+                type: "switch",
+                id: g.id,
+                name: g.name,
+                note: `Toggle monitoring for ${g.name}`,
+                value: this.settings[g.id] !== undefined ? this.settings[g.id] : true,
+            }
+        });
+
         for (const setting of this._config.settingsPanel) {
             if (this.settings[setting.id] !== undefined) {
                 setting.value = this.settings[setting.id];
@@ -225,26 +252,23 @@ class AutoDNDOnGame {
             settings: this._config.settingsPanel,
             onChange: (category, id, value) => {
                 this.settings[id] = value; 
-                this.saveAndUpdate();
+                Data.save(this._config.info.name, "settings", this.settings);
             },
         });
     }
 
-    saveAndUpdate() {
-        Data.save(this._config.info.name, "settings", this.settings);
-    }
 
-    // Called when the presence changes.
     handlePresenceChange() {
         const currentUser = this.CurrentUserStore.getCurrentUser();
         if (!currentUser) return;
         const activities = this.presenceStore.getActivities(currentUser.id);
 
-        // Look for an activity of type 0 ("Playing") with a non-empty name.
+        // activity type 0 = playing
         const isPlayingGame =
             Array.isArray(activities) &&
             activities.some(activity => activity.type === 0 && activity.name);
-        if (isPlayingGame) {
+        if (isPlayingGame && activities.some(activity => this.settings[activity.application_id] !== false)) {
+            console.log("working");
             if (!this.hasSetStatus) {
                 if (this.currentStatus() !== this.settings.inGameStatus) {
                     this.updateStatus(this.settings.inGameStatus);
@@ -256,7 +280,7 @@ class AutoDNDOnGame {
                         this.revertTimeoutId = null;
                     }
                 } else {
-                    Logger.info(this._config.info.name, "Status change limit reached. Skipping status change");
+                    Logger.info(this._config.info.name, "Status is already set to in-game status");
                 }
             }
         } else {
@@ -281,7 +305,6 @@ class AutoDNDOnGame {
         return this.UserSettingsProtoStore.settings.status.status.value;
     }
 
-    // Update user status
     updateStatus(toStatus) {
         if (this.statusChangeCount >= this.statusChangeThreshold) {
             Logger.info(this._config.info.name, "Status change limit reached. Skipping status change");
